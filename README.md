@@ -13,7 +13,8 @@ to ensure AWS/database access uses temporary credentials.
 
 ## General Usage
 
-[docs](./docs/README.md)
+[docs](https://mothership.github.io/rds-auth-proxy/)
+
 
 ## Design 
 
