@@ -1,0 +1,3 @@
+- Sidebar
+  - [About](/)
+  - [Architecture](./architecture.md)
