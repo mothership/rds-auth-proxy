@@ -1,8 +1,18 @@
 # RDS Proxy
 
-## General Usage
+A two-layer proxy for connecting into RDS postgres databases 
+based on IAM authentication. 
 
-For contributing, see [contribution guide](https://github.com/mothership/rds-auth-proxy).
+This tool allows you to keep your databases firewalled off, 
+manage database access through IAM policies, and no developer 
+will ever have to share or type a password.
+
+As a side note, this pairs extremely well with a tool like [saml2aws](https://github.com/Versent/saml2aws)
+to ensure AWS/database access uses temporary credentials.
+
+## Contributing 
+
+For contributing, see [project page](https://github.com/mothership/rds-auth-proxy).
 
 ## Security
 
