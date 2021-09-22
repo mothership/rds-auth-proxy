@@ -1,3 +1,3 @@
-- Sidebar
+- RDS Auth Proxy 
   - [About](/)
   - [Architecture](./architecture.md)
