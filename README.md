@@ -15,7 +15,6 @@ to ensure AWS/database access uses temporary credentials.
 
 [docs](https://mothership.github.io/rds-auth-proxy/)
 
-
 ## Design 
 
 One proxy is run in your VPC subnet that can reach your RDS instances,
