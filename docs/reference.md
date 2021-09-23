@@ -8,6 +8,16 @@
 
 **Upstream Proxy** - The server proxy. 
 
+## Database Tags
+
+There are a few database tags that can change the behavior of 
+`rds-auth-proxy` on the client proxy. 
+
+| Tag | Behavior |
+| --- | -------- |
+| `rds-auth-proxy:db-name` | Provides the end user a hint about the default database name |
+| `rds-auth-proxy:local-port` | Sets the local port used by the client proxy for that database. Having a static local port per database allows developers to share connection configurations for various database tools |
+
 ## Client Config
 
 A full example of every option available:

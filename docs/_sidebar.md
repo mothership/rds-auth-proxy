@@ -1,4 +1,6 @@
 - [Getting Started](./quickstart.md)
 - [Architecture](./architecture.md)
 - [Security](./security.md)
+- [Guides](./guides/)
+  - [Unique Port Per Database](./guides/unique_port_per_db.md)
 - [Reference](./reference.md)
