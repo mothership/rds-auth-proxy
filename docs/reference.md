@@ -141,9 +141,9 @@ proxy:
     enabled: false 
 
     # Path to a pem-encoded certificate for the proxy
-    certificate: ~/.config/rds-auth-proxy/server-cert.pem 
+    certificate: /etc/rds-auth-proxy/server-cert.pem 
     # Path to a pem-encoded private key for the certificate 
-    private_key: ~/.config/rds-auth-proxy/server-key.pem
+    private_key: /etc/rds-auth-proxy/server-key.pem
 
     # Path to a pem-encoded certificate for upstream connections 
     #
