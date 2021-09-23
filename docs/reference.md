@@ -96,7 +96,9 @@ upstream_proxies:
       deployment: rds-auth-proxy
       # The namespace of your server proxy
       namespace: rds-auth-proxy 
-      # The local port to bind our connection to
+      # Optional, the local port for the port-forward tunnel
+      # if not specified, a random unused port will be used. If you have
+      # multiple upstream proxies, leave this unset!
       local_port: 8000
       # The remote port of the proxy 
       remote_port: 8000
