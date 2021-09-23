@@ -1,0 +1,77 @@
+before:
+  hooks:
+    - go mod tidy
+project_name: rds-auth-proxy 
+builds:
+- env:
+    - CGO_ENABLED=0
+  id: rds-auth-proxy-macos-amd
+  goos:
+    - darwin
+  goarch:
+    - amd64
+  ldflags:
+    - "-s -w"
+    - "-X github.com/mothership/rds-auth-proxy/cmd.version={{.Version}}"
+    - "-X github.com/mothership/rds-auth-proxy/cmd.commit={{.Commit}}"
+    - "-X github.com/mothership/rds-auth-proxy/cmd.date={{.Date}}"
+  hooks:
+    post: 
+      - gon build/signing-config-amd.json
+- env:
+    - CGO_ENABLED=0
+  id: rds-auth-proxy-macos-arm
+  goos:
+    - darwin
+  goarch:
+    - arm64
+  ldflags:
+    - "-s -w"
+    - "-X github.com/mothership/rds-auth-proxy/cmd.version={{.Version}}"
+    - "-X github.com/mothership/rds-auth-proxy/cmd.commit={{.Commit}}"
+    - "-X github.com/mothership/rds-auth-proxy/cmd.date={{.Date}}"
+  hooks:
+    post: 
+      - gon build/signing-config-arm.json
+- env: 
+    - CGO_ENABLED=0
+  id: rds-auth-proxy
+  goos:
+    - windows
+    - linux
+  goarch:
+    - amd64
+    - arm64
+  ldflags:
+    - "-s -w"
+    - "-X github.com/mothership/rds-auth-proxy/cmd.version={{.Version}}"
+    - "-X github.com/mothership/rds-auth-proxy/cmd.commit={{.Commit}}"
+    - "-X github.com/mothership/rds-auth-proxy/cmd.date={{.Date}}"
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+archives:
+- id: signing
+  builds:
+    - rds-auth-proxy-macos-arm
+    - rds-auth-proxy-macos-amd
+  format: zip
+  name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+  files:
+    - none*
+- id: distribution
+  builds:
+    - rds-auth-proxy
+    - rds-auth-proxy-macos-arm
+    - rds-auth-proxy-macos-amd
+  format: tar.gz 
+  name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+  format_overrides:
+    - goos: windows
+      format: zip
+release:
+  ids:  
+    - distribution 
+changelog:
+  skip: true
