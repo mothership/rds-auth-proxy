@@ -10,10 +10,9 @@ will ever have to share or type a password.
 As a side note, this pairs extremely well with a tool like [saml2aws](https://github.com/Versent/saml2aws)
 to ensure AWS/database access uses temporary credentials.
 
-
 ## General Usage
 
-[docs](https://mothership.github.io/rds-auth-proxy/)
+General documentation is available on our [project site](https://mothership.github.io/rds-auth-proxy/).
 
 ## Design 
 
@@ -47,4 +46,3 @@ The security of this setup depends on the following assumptions:
   the server-side proxy (VPN, SSH tunnel, k8s port-forward, etc.).
 * You have adequate IAM policies, restricting which the 
   roles/databases a developer may use.
-
