@@ -1,6 +1,6 @@
 # Security 
 
-Found an issue? Send us an email at [security@mothershio.com](mailto:security@mothership.com). 
+Found an issue? Send us an email at [security@mothership.com](mailto:security@mothership.com). 
 
 As this software is in early development, there are no bounties, but you'll get credit and 
 have our eternal gratitude!
