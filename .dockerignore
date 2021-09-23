@@ -1,0 +1,13 @@
+rds-proxy
+rds-auth-proxy
+Makefile
+Dockerfile
+docker-compose.yml
+README.md
+CHANGELOG.txt
+
+build/
+!build/bin
+configs/
+docs/
+dist/

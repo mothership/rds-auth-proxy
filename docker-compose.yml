@@ -1,0 +1,44 @@
+version: '3.3'
+services:
+  postgres:
+    image: postgres:12.8-alpine
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
+    restart: always
+    ports:
+      - 5432:5432
+    volumes:
+      - /var/lib/postgresql/data/pgdata
+
+  rds-proxy-server:
+    build: 
+      context: .
+      dockerfile: build/Dockerfile
+    command: "cluster --configfile /configs/server_config.yaml"
+    depends_on: 
+      - postgres
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./configs:/configs
+      - $HOME/.aws/:/.aws/
+    environment:
+      LOG_LEVEL: "debug"
+
+  rds-proxy-client:
+    build: 
+      context: .
+      dockerfile: build/Dockerfile
+    command: "client --target postgres --password password --configfile /configs/client_config.yaml"
+    depends_on:
+      - rds-proxy-server
+    ports:
+      - "8002:8001"
+    volumes:
+      - ./configs:/configs
+      - $HOME/.aws/:/.aws/
+    environment:
+      LOG_LEVEL: "debug"

@@ -1,0 +1,31 @@
+proxy:
+  # The listen addr of this proxy
+  listen_addr: 0.0.0.0:8000
+  ##
+  # SSL Config
+  #
+  # The SSL config for the proxy itself. SSL for individual 
+  # hosts/targets is defined below
+  ssl:
+    enabled: true
+
+  ##
+  # Target ACL
+  #
+  # Configure allowed or blocked hosts / RDS instances.
+  target_acl:
+    allowed_rds_tags: []
+    blocked_rds_tags: []
+
+## 
+# Target configuration
+#
+# This is where you can specify SSL settings for the upstream
+# databases or proxies.  The keys MUST match an allowed target.
+#
+# RDS databases are handled automatically.
+targets:
+  postgres:
+    host: postgres:5432
+    ssl:
+      mode: "disable"  # options are "disable", "verify-full", "verify-ca", or "require"

@@ -1,0 +1,12 @@
+{
+    "source" : [
+        "./dist/rds-auth-proxy-macos-amd_darwin_amd64/rds-auth-proxy"
+    ],
+    "bundle_id" : "com.mothership.rds-auth-proxy",
+    "apple_id": {
+        "password":  "@env:AC_PASSWORD"
+    },
+    "sign" :{
+        "application_identity" : "Developer ID Application: Mothership Technologies, Inc."
+    }
+}

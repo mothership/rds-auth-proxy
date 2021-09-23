@@ -1,0 +1,14 @@
+{
+    "apple_id": {
+      "password": "@env:AC_PASSWORD"
+    },
+    "notarize": [
+        {
+          "path": "./dist/rds-auth-proxy_darwin_amd64.zip",
+          "bundle_id": "com.mothership.rds-auth-proxy"
+        }, {
+          "path": "./dist/rds-auth-proxy_darwin_arm64.zip",
+          "bundle_id": "com.mothership.rds-auth-proxy"
+        }
+    ]
+}
