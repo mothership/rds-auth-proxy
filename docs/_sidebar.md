@@ -1,3 +1,4 @@
 - [Getting Started](./quickstart.md)
 - [Architecture](./architecture.md)
 - [Security](./security.md)
+- [Reference](./reference.md)
