@@ -1,4 +1,8 @@
-# RDS Proxy
+# RDS Auth Proxy
+
+![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/mothership/rds-auth-proxy)
+![GitHub branch checks state](https://img.shields.io/github/checks-status/mothership/rds-auth-proxy/main)
+![Go Report Card](https://goreportcard.com/badge/github.com/mothership/rds-auth-proxy)
 
 A two-layer proxy for connecting into RDS postgres databases 
 based on IAM authentication. 
