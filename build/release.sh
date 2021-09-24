@@ -105,7 +105,7 @@ log "generating changelog..."
     
 log "changelog created, adding to git..."
 git add CHANGELOG.md
-git commit -m -S "docs: Update CHANGELOG for $next release"
+git commit -S -m "docs: Update CHANGELOG for $next release"
 
 log "creating tag $next..."
 git tag "$next"
