@@ -26,7 +26,7 @@ func TestFileWriter_Valid(t *testing.T) {
 		writer.Fs = afero.NewMemMapFs()
 		_, _ = writer.Write(test.Content)
 		if err := writer.Save(test.FileName); err != nil {
-			t.Errorf("[Case %d]: Error occured while writing file: %t", idx, err)
+			t.Errorf("[Case %d]: Error occurred while writing file: %t", idx, err)
 		}
 		info, err := writer.Fs.Stat(test.FileName)
 		if os.IsNotExist(err) || info.IsDir() {
@@ -58,7 +58,7 @@ func TestFileWriter_Invalid(t *testing.T) {
 		_, _ = writer.Write(test.Content)
 		err := writer.Save(testPath + test.FileName)
 		if !strings.Contains(err.Error(), test.ExpectedError) {
-			t.Errorf("[Case %d]: Unexpected error occured while writing file: %t", idx, err)
+			t.Errorf("[Case %d]: Unexpected error occurred while writing file: %t", idx, err)
 		}
 	}
 }
