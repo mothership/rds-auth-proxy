@@ -78,6 +78,18 @@ serviceAccount:
   annotations:
     eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/rds-auth-proxy 
 
+rbac:
+  # This creates a role with permissions to get/list pods + portforward to them in
+  # the release namespace.
+  create: true
+  # Add your developer group, or list of users here to give them permissions
+  # to port-forward to the server proxy
+  portforwardSubjects:
+    - name: my-developer-group
+      kind: Group
+      apiGroup: rbac.authorization.k8s.io
+      
+
 proxy:
   # Disable SSL/TLS to the proxy itself, we'll tunnel the connection over a port-forward 
   ssl:
