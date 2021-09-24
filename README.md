@@ -7,6 +7,10 @@ This tool allows you to keep your databases firewalled off,
 manage database access through IAM policies, and no developer 
 will ever have to share or type a password.
 
+![Running the proxy](./docs/images/proxy.gif)
+
+![Connecting with psql](./docs/images/psql.gif)
+
 As a side note, this pairs extremely well with a tool like [saml2aws](https://github.com/Versent/saml2aws)
 to ensure AWS/database access uses temporary credentials.
 
