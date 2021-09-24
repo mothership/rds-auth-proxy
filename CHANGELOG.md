@@ -8,5 +8,9 @@
 - Initial import (#6) (2f1def0)
 - Changelog & Conventional Commit linter (f31ca29)
 
+### Bug Fixes
+
+- fix release script (04f419d)
+
 ---
 
