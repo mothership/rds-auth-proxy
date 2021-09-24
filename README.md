@@ -46,3 +46,22 @@ The security of this setup depends on the following assumptions:
   the server-side proxy (VPN, SSH tunnel, k8s port-forward, etc.).
 * You have adequate IAM policies, restricting which the 
   roles/databases a developer may use.
+
+
+## Releasing
+
+CI handles building binaries and images on tag events. 
+
+To create a release, start with a dry-run on the main branch:
+
+```bash
+git checkout main
+./build/release.sh --dry-run
+```
+
+Ensure that the changelog looks as expected, then run it for real:
+
+```bash
+./build/release.sh
+```
+
