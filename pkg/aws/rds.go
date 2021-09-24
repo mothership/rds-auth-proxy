@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	filterEngine   = "engine"
-	enginePostgres = "postgres"
+	filterEngine         = "engine"
+	enginePostgres       = "postgres"
+	engineAuroraPostgres = "aurora-postgresql"
 )
 
 // DBInstanceResult is wrapper around a DBInstance or error
@@ -54,7 +55,7 @@ func (r *rdsClient) GetPostgresInstances(ctx context.Context) <-chan DBInstanceR
 		paginator := r.rdsPaginator([]types.Filter{
 			{
 				Name:   strPtr(filterEngine),
-				Values: []string{enginePostgres},
+				Values: []string{enginePostgres, engineAuroraPostgres},
 			},
 		})
 		for paginator.HasMorePages() {
