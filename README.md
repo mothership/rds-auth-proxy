@@ -26,10 +26,10 @@ will ever have to share or type a password.
 
 ![Connecting with psql](./docs/images/psql.gif)
 
-As a side note, this pairs extremely well with a tool like [saml2aws](https://github.com/Versent/saml2aws)
-to ensure AWS/database access uses temporary credentials.
+This pairs extremely well with a tool like [saml2aws](https://github.com/Versent/saml2aws)
+to ensure all AWS/database access uses temporary credentials.
 
-## General Usage
+## Documentation
 
 General documentation is available on our [project site](https://mothership.github.io/rds-auth-proxy/).
 
