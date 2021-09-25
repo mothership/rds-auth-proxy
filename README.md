@@ -1,4 +1,15 @@
-# RDS Auth Proxy
+<div align="center">
+  <div>
+    <img style="height: 150px;" src="./docs/images/shield-icon-gradient.svg" />
+    <h1>RDS Auth Proxy</h1>
+  </div>
+</div>
+
+<p align="center"> 
+</p>
+
+<p align="center">
+</p>
 
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/mothership/rds-auth-proxy)
 ![GitHub branch checks state](https://img.shields.io/github/checks-status/mothership/rds-auth-proxy/main)
