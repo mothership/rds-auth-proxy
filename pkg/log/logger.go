@@ -21,7 +21,7 @@ func Info(msg string, args ...zap.Field) {
 
 // Warn forwards warn logs to the root logger
 func Warn(msg string, args ...zap.Field) {
-	rootLogger.Debug(msg, args...)
+	rootLogger.Warn(msg, args...)
 }
 
 // Error forwards error logs to the root logger
