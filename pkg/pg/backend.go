@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"io"
 	"net"
+	"sync"
 	"time"
 
 	pgproto3 "github.com/jackc/pgproto3/v2"
@@ -27,6 +28,7 @@ type PostgresBackend struct {
 	backend     *pgproto3.Backend
 	connection  net.Conn
 	IdleTimeout time.Duration
+	Mutex       sync.Mutex
 }
 
 // BackendOption allows us to specify options
@@ -38,6 +40,7 @@ func NewBackend(conn net.Conn, opts ...BackendOption) (*PostgresBackend, error) 
 		backend:     pgproto3.NewBackend(pgproto3.NewChunkReader(conn), conn),
 		connection:  conn,
 		IdleTimeout: readTimeout,
+		Mutex:       sync.Mutex{},
 	}
 
 	for _, opt := range opts {
@@ -51,7 +54,10 @@ func NewBackend(conn net.Conn, opts ...BackendOption) (*PostgresBackend, error) 
 
 // Send sends a backend message to the backend
 func (b *PostgresBackend) Send(msg pgproto3.BackendMessage) error {
-	return b.backend.Send(msg)
+	b.Mutex.Lock()
+	err := b.backend.Send(msg)
+	b.Mutex.Unlock()
+	return err
 }
 
 // SendRaw sends arbitrary bytes to a backend

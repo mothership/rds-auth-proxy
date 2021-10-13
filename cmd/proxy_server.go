@@ -44,6 +44,7 @@ var proxyServerCommand = &cobra.Command{
 		manager, err := proxy.NewManager(proxy.MergeOptions(opts, []proxy.Option{
 			proxy.WithListenAddress(cfg.Proxy.ListenAddr),
 			proxy.WithMode(proxy.ServerSide),
+			proxy.WithQueryInterceptor(nil),
 			proxy.WithCredentialInterceptor(func(creds *proxy.Credentials) error {
 				hostConfig, ok := cfg.HostMap[creds.Host]
 				if !ok {
