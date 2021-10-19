@@ -2,6 +2,7 @@ package examples
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgproto3/v2"
 	"github.com/mothership/rds-auth-proxy/pkg/pg"
@@ -22,7 +23,7 @@ func BasicDelayedInterceptor(frontend pg.Frontend, backend pg.Backend, msg *pgpr
 	go func(frontend pg.Frontend, backend pg.Backend, msg *pgproto3.Query) {
 		message := "Starting long running task. Please wait."
 		_ = backend.Send(&pgproto3.NoticeResponse{Message: message})
-		// do task
+		time.Sleep(time.Second * 5)
 		_ = frontend.Send(msg)
 	}(frontend, backend, msg)
 	return fmt.Errorf(proxy.WillSendManually)

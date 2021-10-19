@@ -38,7 +38,7 @@ type PostgresFrontend struct {
 	frontend    *pgproto3.Frontend
 	connection  net.Conn
 	IdleTimeout time.Duration
-	Mutex       sync.Mutex
+	mutex       sync.Mutex
 }
 
 // FrontendOption allows us to specify options
@@ -50,7 +50,7 @@ func NewFrontend(conn net.Conn, opts ...FrontendOption) (*PostgresFrontend, erro
 		frontend:    pgproto3.NewFrontend(pgproto3.NewChunkReader(conn), conn),
 		connection:  conn,
 		IdleTimeout: readTimeout,
-		Mutex:       sync.Mutex{},
+		mutex:       sync.Mutex{},
 	}
 
 	for _, opt := range opts {
@@ -64,10 +64,9 @@ func NewFrontend(conn net.Conn, opts ...FrontendOption) (*PostgresFrontend, erro
 
 // Send sends a frontend message to the backend
 func (f *PostgresFrontend) Send(msg pgproto3.FrontendMessage) error {
-	f.Mutex.Lock()
-	err := f.frontend.Send(msg)
-	f.Mutex.Unlock()
-	return err
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+	return f.frontend.Send(msg)
 }
 
 // SendRaw sends arbitrary bytes to a backend
