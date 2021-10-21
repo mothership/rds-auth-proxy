@@ -50,7 +50,7 @@ type Config struct {
 }
 
 // QueryInterceptor provides a way to define custom behavior for handling messages
-type QueryInterceptor func(frontend pg.Frontend, backend pg.Backend, msg *pgproto3.Query) error
+type QueryInterceptor func(frontend pg.SendOnlyFrontend, backend pg.SendOnlyBackend, msg *pgproto3.Query) error
 
 // WillSendManually lets the proxy know that QueryInterceptor will handle sending the message
 const WillSendManually = "WillSendManually"
