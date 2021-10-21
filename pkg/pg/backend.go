@@ -23,6 +23,11 @@ type Backend interface {
 	ReceiveRaw() ([]byte, error)
 }
 
+// SendOnlyBackend allows only the send operation to be accessed for network safety
+type SendOnlyBackend interface {
+	Send(msg pgproto3.BackendMessage) error
+}
+
 // PostgresBackend implements a postgres backend client
 type PostgresBackend struct {
 	backend     *pgproto3.Backend

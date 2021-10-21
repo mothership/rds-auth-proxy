@@ -25,6 +25,11 @@ type Frontend interface {
 	ReceiveRaw() ([]byte, error)
 }
 
+// SendOnlyFrontend allows only the send operation to be accessed for network safety
+type SendOnlyFrontend interface {
+	Send(msg pgproto3.FrontendMessage) error
+}
+
 type AuthFailedError struct {
 	ErrMsg *pgproto3.ErrorResponse
 }

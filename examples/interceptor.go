@@ -11,7 +11,7 @@ import (
 
 // BasicInterceptor just echoes back the query to the backend.
 // Since it returns nil, the proxy will handle sending the message to the frontend.
-func BasicInterceptor(frontend pg.Frontend, backend pg.Backend, msg *pgproto3.Query) error {
+func BasicInterceptor(frontend pg.SendOnlyFrontend, backend pg.SendOnlyBackend, msg *pgproto3.Query) error {
 	message := fmt.Sprintf("Got query from client: %+v", msg.String)
 	_ = backend.Send(&pgproto3.NoticeResponse{Message: message})
 	return nil
@@ -19,8 +19,8 @@ func BasicInterceptor(frontend pg.Frontend, backend pg.Backend, msg *pgproto3.Qu
 
 // BasicDelayedInterceptor calls a goroutine and tells the proxy it
 // will take care of sending the message to the frontend.
-func BasicDelayedInterceptor(frontend pg.Frontend, backend pg.Backend, msg *pgproto3.Query) error {
-	go func(frontend pg.Frontend, backend pg.Backend, msg *pgproto3.Query) {
+func BasicDelayedInterceptor(frontend pg.SendOnlyFrontend, backend pg.SendOnlyBackend, msg *pgproto3.Query) error {
+	go func(frontend pg.SendOnlyFrontend, backend pg.SendOnlyBackend, msg *pgproto3.Query) {
 		message := "Starting long running task. Please wait."
 		_ = backend.Send(&pgproto3.NoticeResponse{Message: message})
 		time.Sleep(time.Second * 5)
