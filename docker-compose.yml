@@ -17,7 +17,7 @@ services:
     build: 
       context: .
       dockerfile: build/Dockerfile
-    command: "cluster --configfile /configs/server_config.yaml"
+    command: "server --configfile /configs/server_config.yaml"
     depends_on: 
       - postgres
     ports:

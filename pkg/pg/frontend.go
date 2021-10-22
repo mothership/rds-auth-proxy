@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"sync"
 	"time"
 
 	pgproto3 "github.com/jackc/pgproto3/v2"
@@ -24,6 +25,11 @@ type Frontend interface {
 	ReceiveRaw() ([]byte, error)
 }
 
+// SendOnlyFrontend allows only the send operation to be accessed for network safety
+type SendOnlyFrontend interface {
+	Send(msg pgproto3.FrontendMessage) error
+}
+
 type AuthFailedError struct {
 	ErrMsg *pgproto3.ErrorResponse
 }
@@ -37,6 +43,7 @@ type PostgresFrontend struct {
 	frontend    *pgproto3.Frontend
 	connection  net.Conn
 	IdleTimeout time.Duration
+	mutex       sync.Mutex
 }
 
 // FrontendOption allows us to specify options
@@ -48,6 +55,7 @@ func NewFrontend(conn net.Conn, opts ...FrontendOption) (*PostgresFrontend, erro
 		frontend:    pgproto3.NewFrontend(pgproto3.NewChunkReader(conn), conn),
 		connection:  conn,
 		IdleTimeout: readTimeout,
+		mutex:       sync.Mutex{},
 	}
 
 	for _, opt := range opts {
@@ -61,6 +69,8 @@ func NewFrontend(conn net.Conn, opts ...FrontendOption) (*PostgresFrontend, erro
 
 // Send sends a frontend message to the backend
 func (f *PostgresFrontend) Send(msg pgproto3.FrontendMessage) error {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
 	return f.frontend.Send(msg)
 }
 

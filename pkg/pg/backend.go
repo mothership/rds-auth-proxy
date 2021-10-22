@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"io"
 	"net"
+	"sync"
 	"time"
 
 	pgproto3 "github.com/jackc/pgproto3/v2"
@@ -22,11 +23,17 @@ type Backend interface {
 	ReceiveRaw() ([]byte, error)
 }
 
+// SendOnlyBackend allows only the send operation to be accessed for network safety
+type SendOnlyBackend interface {
+	Send(msg pgproto3.BackendMessage) error
+}
+
 // PostgresBackend implements a postgres backend client
 type PostgresBackend struct {
 	backend     *pgproto3.Backend
 	connection  net.Conn
 	IdleTimeout time.Duration
+	mutex       sync.Mutex
 }
 
 // BackendOption allows us to specify options
@@ -38,6 +45,7 @@ func NewBackend(conn net.Conn, opts ...BackendOption) (*PostgresBackend, error) 
 		backend:     pgproto3.NewBackend(pgproto3.NewChunkReader(conn), conn),
 		connection:  conn,
 		IdleTimeout: readTimeout,
+		mutex:       sync.Mutex{},
 	}
 
 	for _, opt := range opts {
@@ -51,6 +59,8 @@ func NewBackend(conn net.Conn, opts ...BackendOption) (*PostgresBackend, error) 
 
 // Send sends a backend message to the backend
 func (b *PostgresBackend) Send(msg pgproto3.BackendMessage) error {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
 	return b.backend.Send(msg)
 }
 

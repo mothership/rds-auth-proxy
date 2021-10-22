@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 
+	pgproto3 "github.com/jackc/pgproto3/v2"
 	"github.com/mothership/rds-auth-proxy/pkg/cert"
 	"github.com/mothership/rds-auth-proxy/pkg/pg"
 )
@@ -44,8 +45,15 @@ type Config struct {
 	DefaultClientCertificate *tls.Certificate
 	ListenAddress            *net.TCPAddr
 	CredentialInterceptor    CredentialInterceptor
+	QueryInterceptor         QueryInterceptor
 	Mode                     Mode
 }
+
+// QueryInterceptor provides a way to define custom behavior for handling messages
+type QueryInterceptor func(frontend pg.SendOnlyFrontend, backend pg.SendOnlyBackend, msg *pgproto3.Query) error
+
+// WillSendManually lets the proxy know that QueryInterceptor will handle sending the message
+var WillSendManually = fmt.Errorf("sending manually")
 
 // Option lets you set a config option
 type Option func(*Config) error
@@ -146,6 +154,14 @@ func WithGeneratedClientCertificate() Option {
 			return err
 		}
 		c.DefaultClientCertificate = &cert
+		return nil
+	}
+}
+
+// WithQueryInterceptor adds a function for custom message handling
+func WithQueryInterceptor(interceptor QueryInterceptor) Option {
+	return func(c *Config) (err error) {
+		c.QueryInterceptor = interceptor
 		return nil
 	}
 }

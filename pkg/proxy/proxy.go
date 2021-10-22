@@ -163,9 +163,9 @@ func (p *Proxy) proxyToServer() {
 			}
 			timeouts = 0
 
-			switch msg.(type) {
+			switch castedMsg := msg.(type) {
 			case *pgproto3.Terminate:
-				err := p.frontend.Send(msg)
+				err := p.frontend.Send(castedMsg)
 				if err != nil {
 					_ = p.notifyError(err)
 					return
@@ -173,9 +173,25 @@ func (p *Proxy) proxyToServer() {
 				p.logger.Debug("got disconnected message")
 				p.notifyStopped()
 				return
+			case *pgproto3.Query:
+				p.logger.Debug("got query message from client")
+				if p.config.QueryInterceptor != nil {
+					if err := p.config.QueryInterceptor(p.frontend, p.backend, castedMsg); err != nil {
+						if err != WillSendManually {
+							_ = p.notifyError(err)
+							return
+						}
+						continue
+					}
+				}
+				err := p.frontend.Send(castedMsg)
+				if err != nil {
+					_ = p.notifyError(err)
+					return
+				}
 			default:
 				p.logger.Debug("got message from client")
-				err := p.frontend.Send(msg)
+				err := p.frontend.Send(castedMsg)
 				if err != nil {
 					_ = p.notifyError(err)
 					return
