@@ -53,7 +53,7 @@ type Config struct {
 type QueryInterceptor func(frontend pg.SendOnlyFrontend, backend pg.SendOnlyBackend, msg *pgproto3.Query) error
 
 // WillSendManually lets the proxy know that QueryInterceptor will handle sending the message
-const WillSendManually = "WillSendManually"
+var WillSendManually = fmt.Errorf("sending manually")
 
 // Option lets you set a config option
 type Option func(*Config) error

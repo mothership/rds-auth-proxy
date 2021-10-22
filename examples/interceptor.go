@@ -26,5 +26,5 @@ func BasicDelayedInterceptor(frontend pg.SendOnlyFrontend, backend pg.SendOnlyBa
 		time.Sleep(time.Second * 5)
 		_ = frontend.Send(msg)
 	}(frontend, backend, msg)
-	return fmt.Errorf(proxy.WillSendManually)
+	return proxy.WillSendManually
 }
