@@ -1,0 +1,40 @@
+proxy:
+  # The listen addr of this proxy
+  listen_addr: 127.0.0.1:5433
+  ##
+  # SSL Config
+  #
+  # The SSL config for the proxy itself. SSL for individual 
+  # hosts/targets is defined below
+  ssl:
+    enabled: false 
+  
+  ##
+  # Target ACL
+  #
+  # Configure allowed or blocked hosts / RDS instances.
+  target_acl:
+    allowed_rds_tags: []
+    blocked_rds_tags: []
+
+##
+# Upstream Proxies Configuration
+#
+# This is where you can specify upstream proxy settings
+upstream_proxies:
+  default: 
+    host: rds-proxy-server:8000
+    ssl:
+      mode: "require"
+    aws_auth_only: true
+
+## 
+# Target configuration
+#
+# This is where you can specify SSL settings for the upstream
+# (non-RDS) databases 
+#
+# RDS databases are added automatically at runtime.
+targets:
+  postgres:
+    host: postgres:5432

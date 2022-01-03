@@ -95,13 +95,14 @@ func (p *Proxy) Start() error {
 	p.logger.Info("connected to upstream postgres server", zap.String("postgres_server", creds.Host))
 
 	p.logger.Debug("sending startup message",
+		zap.Bool("aws_auth_only", p.config.AwsAuthOnly),
 		zap.String("postgres_server", creds.Host),
 		zap.String("user", creds.Username),
 		zap.Any("options", creds.Options),
 	)
 
 	// If we're in client proxy mode, forward the password in the StartupMessage
-	if p.config.Mode == ClientSide && creds.Password != "" {
+	if (p.config.Mode == ClientSide && !p.config.AwsAuthOnly) && creds.Password != "" {
 		creds.Options["password"] = creds.Password
 	}
 	// Now send our own StartupMessage, and pass thru any remaining connection parameters.
@@ -113,7 +114,7 @@ func (p *Proxy) Start() error {
 	// Even if we're in server mode, don't bother intercepting the startup message response
 	// UNLESS we have the password/auth credentials to handle it. This lets the user use
 	// the proxy normally, for instance, if they are using it without IAM auth
-	if p.config.Mode == ServerSide && creds.Password != "" {
+	if (p.config.Mode == ServerSide || p.config.AwsAuthOnly) && creds.Password != "" {
 		// Fetch the response to our startup message, most likely this is going to be a request
 		// for us to authenticate. Assuming it is, forward the password we collected.
 		p.logger.Debug("handling upstream authentication", zap.String("postgres_server", creds.Host))
