@@ -2,10 +2,11 @@ package config
 
 import (
 	"context"
-
 	"github.com/mothership/rds-auth-proxy/pkg/aws"
+	"github.com/mothership/rds-auth-proxy/pkg/log"
 	"github.com/mothership/rds-auth-proxy/pkg/pg"
 	"github.com/spf13/viper"
+	"strings"
 )
 
 const (
@@ -14,11 +15,12 @@ const (
 )
 
 type ConfigFile struct {
-	Proxy        Proxy                   `mapstructure:"proxy"`
-	Targets      map[string]*Target      `mapstructure:"targets"`
-	ProxyTargets map[string]*ProxyTarget `mapstructure:"upstream_proxies"`
-	RDSTargets   map[string]*Target
-	HostMap      map[string]*Target
+	Proxy        	Proxy                   `mapstructure:"proxy"`
+	Targets      	map[string]*Target      `mapstructure:"targets"`
+	ProxyTargets 	map[string]*ProxyTarget `mapstructure:"upstream_proxies"`
+	RDSTargets   	map[string]*Target
+	RedshiftTargets map[string]*Target
+	HostMap      	map[string]*Target
 }
 
 type Proxy struct {
@@ -27,14 +29,28 @@ type Proxy struct {
 	ACL        ACL       `mapstructure:"target_acl"`
 }
 
-func LoadConfig(ctx context.Context, rdsClient aws.RDSClient, filepath string) (ConfigFile, error) {
+func LoadConfig(ctx context.Context, rdsClient aws.RDSClient, redshiftClient aws.RedshiftClient ,filepath string) (ConfigFile, error) {
 	cfg, err := loadConfig(filepath)
 	if err != nil {
 		return cfg, err
 	}
 
+	err = RefreshRedshiftTargets(ctx, &cfg, redshiftClient)
+	if err != nil {
+		if !strings.Contains(err.Error(), "StatusCode: 403") {
+			return cfg, err
+		}
+		log.Warn("User Missing Redshift Permissions")
+	}
+
 	err = RefreshRDSTargets(ctx, &cfg, rdsClient)
-	return cfg, err
+	if err != nil {
+		if !strings.Contains(err.Error(), "StatusCode: 403") {
+			return cfg, err
+		}
+		log.Warn("User Missing RDS Permissions")
+	}
+	return cfg, nil
 }
 
 func loadConfig(filepath string) (config ConfigFile, err error) {

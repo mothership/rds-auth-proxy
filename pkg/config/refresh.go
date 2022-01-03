@@ -10,7 +10,7 @@ import (
 )
 
 // RefreshTargets refreshes the proxy target list on an interval
-func RefreshTargets(ctx context.Context, cfg *ConfigFile, rdsClient aws.RDSClient, period time.Duration) {
+func RefreshTargets(ctx context.Context, cfg *ConfigFile, rdsClient aws.RDSClient, redshiftClient aws.RedshiftClient, period time.Duration) {
 	go func() {
 		t := time.NewTicker(period)
 		for {
@@ -22,6 +22,9 @@ func RefreshTargets(ctx context.Context, cfg *ConfigFile, rdsClient aws.RDSClien
 				log.Info("starting target refresh", zap.Strings("targets", targetNames(cfg.RDSTargets)))
 				_ = RefreshRDSTargets(ctx, cfg, rdsClient)
 				log.Info("refresh done", zap.Strings("targets", targetNames(cfg.RDSTargets)))
+				log.Info("starting target refresh", zap.Strings("targets", targetNames(cfg.RedshiftTargets)))
+				_ = RefreshRedshiftTargets(ctx, cfg, redshiftClient)
+				log.Info("refresh done", zap.Strings("targets", targetNames(cfg.RedshiftTargets)))
 			}
 		}
 	}()
