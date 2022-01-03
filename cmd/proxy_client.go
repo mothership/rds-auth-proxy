@@ -42,11 +42,17 @@ var proxyClientCommand = &cobra.Command{
 		if err != nil {
 			return err
 		}
+
+		redshiftClient, err := aws.NewRedshiftClient(ctx)
+		if err != nil {
+			return err
+		}
+
 		filepath, err := cmd.Flags().GetString("configfile")
 		if err != nil {
 			return err
 		}
-		cfg, err := config.LoadConfig(ctx, rdsClient, filepath)
+		cfg, err := config.LoadConfig(ctx, rdsClient, redshiftClient, filepath)
 		if err != nil {
 			return err
 		}
@@ -58,7 +64,7 @@ var proxyClientCommand = &cobra.Command{
 		}
 
 		// Look up the real target name in the target list
-		target, err := getTarget(cmd, cfg.Targets, cfg.RDSTargets)
+		target, err := getTarget(cmd, cfg.Targets, cfg.RDSTargets, cfg.RedshiftTargets)
 		if err != nil {
 			return err
 		}
@@ -117,16 +123,21 @@ var proxyClientCommand = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		var outboundHost string
+
+		if proxyTarget.AwsAuthOnly {
+			outboundHost = target.Host
+		} else {
+			outboundHost = proxyTarget.GetHost()
+		}
 
 		manager, err := proxy.NewManager(proxy.MergeOptions(opts, []proxy.Option{
 			proxy.WithListenAddress(cfg.Proxy.ListenAddr),
 			proxy.WithMode(proxy.ClientSide),
+			proxy.WithAWSAuthOnly(proxyTarget.AwsAuthOnly),
 			proxy.WithCredentialInterceptor(func(creds *proxy.Credentials) error {
 				// Send this connection to the proxy host
-				creds.Host = proxyTarget.GetHost()
-				// But tell the server proxy to forward to the target host
-				creds.Options["host"] = target.Host
-
+				creds.Host =  outboundHost
 				// Use provided password, or generate an RDS password to forward through
 				if pass != "" {
 					creds.Password = pass
@@ -136,6 +147,17 @@ var proxyClientCommand = &cobra.Command{
 						return err
 					}
 					creds.Password = authToken
+				} else if _, ok := cfg.RedshiftTargets[target.Name]; ok {
+					authToken, err := redshiftClient.NewAuthToken(ctx, target.Name, target.Region, creds.Username)
+					if err != nil {
+						return err
+					}
+					creds.Username = "IAM:" + creds.Username
+					creds.Password = authToken
+				}
+
+				if !proxyTarget.AwsAuthOnly {
+					creds.Options["host"] = target.Host
 				}
 
 				return overrideSSLConfig(creds, proxyTarget.SSL)
@@ -206,7 +228,7 @@ func getProxyTarget(cmd *cobra.Command, targets map[string]*config.ProxyTarget) 
 	return nil, fmt.Errorf("couldn't find a proxy target")
 }
 
-func getTarget(cmd *cobra.Command, targets map[string]*config.Target, rdsTargets map[string]*config.Target) (*config.Target, error) {
+func getTarget(cmd *cobra.Command, targets map[string]*config.Target, rdsTargets map[string]*config.Target, redshiftTargets map[string]*config.Target) (*config.Target, error) {
 	// Look up the proxy target
 	targetName, err := cmd.Flags().GetString("target")
 	if err != nil {
@@ -223,11 +245,19 @@ func getTarget(cmd *cobra.Command, targets map[string]*config.Target, rdsTargets
 		return target, nil
 	}
 
+	target, ok = redshiftTargets[targetName]
+	if ok {
+		return target, nil
+	}
+
 	opts := make([]string, 0, len(targets)+len(rdsTargets))
 	for name := range targets {
 		opts = append(opts, name)
 	}
 	for name := range rdsTargets {
+		opts = append(opts, name)
+	}
+	for name := range redshiftTargets {
 		opts = append(opts, name)
 	}
 
@@ -250,6 +280,12 @@ func getTarget(cmd *cobra.Command, targets map[string]*config.Target, rdsTargets
 	if ok {
 		return target, nil
 	}
+
+	target, ok = redshiftTargets[targetName]
+	if ok {
+		return target, nil
+	}
+
 	return nil, fmt.Errorf("couldn't find a target db")
 }
 

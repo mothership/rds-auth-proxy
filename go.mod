@@ -4,10 +4,11 @@ go 1.14
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.2
-	github.com/aws/aws-sdk-go-v2 v1.9.1
+	github.com/aws/aws-sdk-go-v2 v1.11.2
 	github.com/aws/aws-sdk-go-v2/config v1.8.2
 	github.com/aws/aws-sdk-go-v2/feature/rds/auth v1.1.7
 	github.com/aws/aws-sdk-go-v2/service/rds v1.9.0
+	github.com/aws/aws-sdk-go-v2/service/redshift v1.17.0
 	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/jackc/pgproto3/v2 v2.1.1
 	github.com/spf13/afero v1.6.0
