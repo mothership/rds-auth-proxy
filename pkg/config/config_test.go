@@ -1,7 +1,6 @@
 package config_test
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -12,31 +11,22 @@ import (
 
 func TestProxyConfigLoad(t *testing.T) {
 	cases := []struct {
-		FileName          string
-		Error             error
-		ExpectedInHostMap *string
+		FileName string
+		Error    error
 	}{
 		{
-			FileName:          "foo",
-			Error:             fmt.Errorf("Unsupported Config Type"),
-			ExpectedInHostMap: nil,
+			FileName: "foo",
+			Error:    fmt.Errorf("Unsupported Config Type"),
 		},
 		{
-			FileName:          "foo.yaml",
-			Error:             fmt.Errorf("no such file or directory"),
-			ExpectedInHostMap: nil,
+			FileName: "foo.yaml",
+			Error:    fmt.Errorf("no such file or directory"),
 		},
 	}
 	for idx, test := range cases {
-		pcfg, err := LoadConfig(context.Background(), &mockRDSClient{}, test.FileName)
+		_, err := LoadConfig(test.FileName)
 		if !errorContains(err, test.Error) {
 			t.Errorf("[Case %d] expected %+v, got %+v", idx, test.Error, err)
-		}
-		if test.ExpectedInHostMap != nil {
-			_, ok := pcfg.HostMap[*test.ExpectedInHostMap]
-			if !ok {
-				t.Errorf("[Case %d] expected %+v in hostmap", idx, test.ExpectedInHostMap)
-			}
 		}
 	}
 }
@@ -50,9 +40,6 @@ func TestConfigInit(t *testing.T) {
 	}
 	if cfg.ProxyTargets == nil {
 		t.Errorf("expected proxy targets to be initialized")
-	}
-	if cfg.HostMap == nil {
-		t.Errorf("expected hostmap to be initialized")
 	}
 }
 
@@ -76,11 +63,6 @@ func TestTargetsGetDefaults(t *testing.T) {
 		},
 	}
 	cfg.Init()
-
-	if len(cfg.HostMap) != 2 {
-		t.Errorf("expected hostmap to have 2 entries")
-	}
-
 	if cfg.Targets["empty"].Name != "empty" {
 		t.Errorf("Expected empty to have name populated")
 	}
@@ -163,4 +145,8 @@ func errorContains(out error, want error) bool {
 		return false
 	}
 	return strings.Contains(out.Error(), want.Error())
+}
+
+func strPtr(val string) *string {
+	return &val
 }

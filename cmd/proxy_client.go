@@ -14,6 +14,8 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/mothership/rds-auth-proxy/pkg/aws"
 	"github.com/mothership/rds-auth-proxy/pkg/config"
+	"github.com/mothership/rds-auth-proxy/pkg/discovery"
+	discoveryFactory "github.com/mothership/rds-auth-proxy/pkg/discovery/factory"
 	"github.com/mothership/rds-auth-proxy/pkg/kubernetes"
 	"github.com/mothership/rds-auth-proxy/pkg/log"
 	"github.com/mothership/rds-auth-proxy/pkg/proxy"
@@ -36,7 +38,6 @@ var proxyClientCommand = &cobra.Command{
 		}
 		log.SetLogger(logger)
 		ctx, cancel := context.WithCancel(context.Background())
-
 		defer cancel()
 		rdsClient, err := aws.NewRDSClient(ctx)
 		if err != nil {
@@ -46,8 +47,12 @@ var proxyClientCommand = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		cfg, err := config.LoadConfig(ctx, rdsClient, filepath)
+		cfg, err := config.LoadConfig(filepath)
 		if err != nil {
+			return err
+		}
+		discoveryClient := discoveryFactory.FromConfig(rdsClient, &cfg)
+		if err := discoveryClient.Refresh(ctx); err != nil {
 			return err
 		}
 
@@ -58,7 +63,7 @@ var proxyClientCommand = &cobra.Command{
 		}
 
 		// Look up the real target name in the target list
-		target, err := getTarget(cmd, cfg.Targets, cfg.RDSTargets)
+		target, err := getTarget(cmd, discoveryClient)
 		if err != nil {
 			return err
 		}
@@ -130,7 +135,7 @@ var proxyClientCommand = &cobra.Command{
 				// Use provided password, or generate an RDS password to forward through
 				if pass != "" {
 					creds.Password = pass
-				} else if _, ok := cfg.RDSTargets[target.Name]; ok {
+				} else if target.IsRDS {
 					authToken, err := rdsClient.NewAuthToken(ctx, target.Host, target.Region, creds.Username)
 					if err != nil {
 						return err
@@ -158,7 +163,7 @@ var proxyClientCommand = &cobra.Command{
 	},
 }
 
-func printConnectionString(listenAddr string, target *config.Target) error {
+func printConnectionString(listenAddr string, target config.Target) error {
 	addr, err := net.ResolveTCPAddr("tcp", listenAddr)
 	if err != nil {
 		return err
@@ -206,51 +211,28 @@ func getProxyTarget(cmd *cobra.Command, targets map[string]*config.ProxyTarget) 
 	return nil, fmt.Errorf("couldn't find a proxy target")
 }
 
-func getTarget(cmd *cobra.Command, targets map[string]*config.Target, rdsTargets map[string]*config.Target) (*config.Target, error) {
-	// Look up the proxy target
+func getTarget(cmd *cobra.Command, discoveryClient discovery.Client) (config.Target, error) {
 	targetName, err := cmd.Flags().GetString("target")
 	if err != nil {
-		return nil, err
+		return config.Target{}, err
 	}
 
-	target, ok := targets[targetName]
-	if ok {
-		return target, nil
-	}
+	if targetName == "" {
+		targets := discoveryClient.GetTargets()
+		opts := make([]string, 0, len(targets))
+		for _, target := range targets {
+			opts = append(opts, target.Name)
+		}
+		prompt := &survey.Select{
+			Message: "Select a database",
+			Options: opts,
+		}
 
-	target, ok = rdsTargets[targetName]
-	if ok {
-		return target, nil
+		if err := survey.AskOne(prompt, &targetName); err != nil {
+			return config.Target{}, err
+		}
 	}
-
-	opts := make([]string, 0, len(targets)+len(rdsTargets))
-	for name := range targets {
-		opts = append(opts, name)
-	}
-	for name := range rdsTargets {
-		opts = append(opts, name)
-	}
-
-	prompt := &survey.Select{
-		Message: "Select a database",
-		Options: opts,
-	}
-
-	err = survey.AskOne(prompt, &targetName)
-	if err != nil {
-		return nil, err
-	}
-
-	target, ok = targets[targetName]
-	if ok {
-		return target, nil
-	}
-
-	target, ok = rdsTargets[targetName]
-	if ok {
-		return target, nil
-	}
-	return nil, fmt.Errorf("couldn't find a target db")
+	return discoveryClient.LookupTargetByName(targetName)
 }
 
 func overrideSSLConfig(creds *proxy.Credentials, ssl config.SSL) error {
