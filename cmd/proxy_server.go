@@ -7,6 +7,8 @@ import (
 
 	"github.com/mothership/rds-auth-proxy/pkg/aws"
 	"github.com/mothership/rds-auth-proxy/pkg/config"
+	"github.com/mothership/rds-auth-proxy/pkg/discovery"
+	discoveryFactory "github.com/mothership/rds-auth-proxy/pkg/discovery/factory"
 	"github.com/mothership/rds-auth-proxy/pkg/log"
 	"github.com/mothership/rds-auth-proxy/pkg/proxy"
 	"github.com/spf13/cobra"
@@ -31,8 +33,12 @@ var proxyServerCommand = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		cfg, err := config.LoadConfig(ctx, rdsClient, filepath)
+		cfg, err := config.LoadConfig(filepath)
 		if err != nil {
+			return err
+		}
+		discoveryClient := discoveryFactory.FromConfig(rdsClient, &cfg)
+		if err := discoveryClient.Refresh(ctx); err != nil {
 			return err
 		}
 
@@ -45,8 +51,8 @@ var proxyServerCommand = &cobra.Command{
 			proxy.WithListenAddress(cfg.Proxy.ListenAddr),
 			proxy.WithMode(proxy.ServerSide),
 			proxy.WithCredentialInterceptor(func(creds *proxy.Credentials) error {
-				hostConfig, ok := cfg.HostMap[creds.Host]
-				if !ok {
+				hostConfig, err := discoveryClient.LookupTargetByHost(creds.Host)
+				if err != nil {
 					logger.Warn("client attempted to login to unknown host", zap.String("host", creds.Host))
 					return fmt.Errorf("host not allowed by ACL, or not configured for this proxy")
 				}
@@ -56,10 +62,39 @@ var proxyServerCommand = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		config.RefreshTargets(ctx, &cfg, rdsClient, 1*time.Minute)
+		// TODO: periodic refresh of discovery client
+		RefreshTargets(ctx, discoveryClient, 1*time.Minute)
 		err = manager.Start(ctx)
 		return err
 	},
+}
+
+func RefreshTargets(ctx context.Context, client discovery.Client, period time.Duration) {
+	go func() {
+		t := time.NewTicker(period)
+		for {
+			select {
+			case <-ctx.Done():
+				t.Stop()
+				return
+			case <-t.C:
+				log.Info("starting target refresh", zap.Strings("targets", targetNames(client.GetTargets())))
+				if err := client.Refresh(ctx); err != nil {
+					log.Warn("refresh failed", zap.Error(err), zap.Strings("targets", targetNames(client.GetTargets())))
+				} else {
+					log.Info("refresh done", zap.Strings("targets", targetNames(client.GetTargets())))
+				}
+			}
+		}
+	}()
+}
+
+func targetNames(targets []config.Target) []string {
+	instances := make([]string, 0, len(targets))
+	for _, target := range targets {
+		instances = append(instances, target.Name)
+	}
+	return instances
 }
 
 func init() {

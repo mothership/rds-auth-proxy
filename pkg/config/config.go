@@ -1,9 +1,6 @@
 package config
 
 import (
-	"context"
-
-	"github.com/mothership/rds-auth-proxy/pkg/aws"
 	"github.com/mothership/rds-auth-proxy/pkg/pg"
 	"github.com/spf13/viper"
 )
@@ -17,8 +14,6 @@ type ConfigFile struct {
 	Proxy        Proxy                   `mapstructure:"proxy"`
 	Targets      map[string]*Target      `mapstructure:"targets"`
 	ProxyTargets map[string]*ProxyTarget `mapstructure:"upstream_proxies"`
-	RDSTargets   map[string]*Target
-	HostMap      map[string]*Target
 }
 
 type Proxy struct {
@@ -27,17 +22,8 @@ type Proxy struct {
 	ACL        ACL       `mapstructure:"target_acl"`
 }
 
-func LoadConfig(ctx context.Context, rdsClient aws.RDSClient, filepath string) (ConfigFile, error) {
-	cfg, err := loadConfig(filepath)
-	if err != nil {
-		return cfg, err
-	}
-
-	err = RefreshRDSTargets(ctx, &cfg, rdsClient)
-	return cfg, err
-}
-
-func loadConfig(filepath string) (config ConfigFile, err error) {
+func LoadConfig(filepath string) (ConfigFile, error) {
+	var config ConfigFile
 	if filepath != "" {
 		viper.SetConfigFile(filepath)
 	} else {
@@ -46,16 +32,14 @@ func loadConfig(filepath string) (config ConfigFile, err error) {
 		viper.AddConfigPath("$XDG_CONFIG_HOME/rds-auth-proxy")
 		viper.AddConfigPath("$HOME/.config/rds-auth-proxy")
 	}
-	err = viper.ReadInConfig()
-	if err != nil {
-		return
+	if err := viper.ReadInConfig(); err != nil {
+		return config, err
 	}
-	err = viper.Unmarshal(&config)
-	if err != nil {
-		return
+	if err := viper.Unmarshal(&config); err != nil {
+		return config, err
 	}
 	config.Init()
-	return
+	return config, nil
 }
 
 // Init sets up defaults for the config file
@@ -73,9 +57,7 @@ func (c *ConfigFile) Init() {
 	}
 
 	c.Proxy.ACL.Init()
-
-	// Copy any manually specified targets into the hostmap for easier lookup
-	c.HostMap = make(map[string]*Target, len(c.Targets))
+	// Set up SSL defaults for all targets if not set
 	for key, target := range c.Targets {
 		target.Name = key
 		// if no SSL keys
@@ -86,9 +68,9 @@ func (c *ConfigFile) Init() {
 			target.SSL.ClientCertificatePath = c.Proxy.SSL.ClientCertificatePath
 			target.SSL.ClientPrivateKeyPath = c.Proxy.SSL.ClientPrivateKeyPath
 		}
-		c.HostMap[target.Host] = target
 	}
 
+	// Set up SSL defaults for all proxies if not set
 	for key, target := range c.ProxyTargets {
 		target.Name = key
 		if target.PortForward != nil && target.PortForward.KubeConfigFilePath == "" {
@@ -107,17 +89,4 @@ func (c *ConfigFile) Init() {
 			target.SSL.ClientPrivateKeyPath = c.Proxy.SSL.ClientPrivateKeyPath
 		}
 	}
-}
-
-// RefreshHostMap updates the list of hosts the proxy knows about
-func (c *ConfigFile) RefreshHostMap() {
-	hostMap := make(map[string]*Target, len(c.Targets)+len(c.RDSTargets))
-	for _, target := range c.RDSTargets {
-		hostMap[target.Host] = target
-	}
-
-	for _, target := range c.Targets {
-		hostMap[target.Host] = target
-	}
-	c.HostMap = hostMap
 }
