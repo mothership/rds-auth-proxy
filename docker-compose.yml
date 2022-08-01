@@ -36,7 +36,7 @@ services:
     depends_on:
       - rds-proxy-server
     ports:
-      - "8002:8001"
+      - "8001:8001"
     volumes:
       - ./configs:/configs
       - $HOME/.aws/:/.aws/
