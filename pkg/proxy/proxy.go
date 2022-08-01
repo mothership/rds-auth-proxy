@@ -254,7 +254,7 @@ func isRetryableError(err error) bool {
 		return true
 	}
 	if netErr, ok := err.(net.Error); ok {
-		return netErr.Timeout() || netErr.Temporary()
+		return netErr.Timeout() || netErr.Temporary() //nolint
 	}
 	return false
 }
