@@ -36,8 +36,7 @@ In order to do this, it must be able to list RDS instances. An example IAM polic
             "rds:ListTagsForResource"
          ],
          "Resource": [
-            "arn:aws:rds:*:*:db:*",
-            "arn:aws:rds:*:*:pg:*"
+            "arn:aws:rds:*:*:db:*"
         ]
       }
    ]
