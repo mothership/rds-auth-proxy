@@ -122,16 +122,21 @@ var proxyClientCommand = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		var outboundHost string
+
+		if proxyTarget.AwsAuthOnly {
+			outboundHost = target.Host
+		} else {
+			outboundHost = proxyTarget.GetHost()
+		}
 
 		manager, err := proxy.NewManager(proxy.MergeOptions(opts, []proxy.Option{
 			proxy.WithListenAddress(cfg.Proxy.ListenAddr),
 			proxy.WithMode(proxy.ClientSide),
+			proxy.WithAWSAuthOnly(proxyTarget.AwsAuthOnly),
 			proxy.WithCredentialInterceptor(func(creds *proxy.Credentials) error {
 				// Send this connection to the proxy host
-				creds.Host = proxyTarget.GetHost()
-				// But tell the server proxy to forward to the target host
-				creds.Options["host"] = target.Host
-
+				creds.Host =  outboundHost
 				// Use provided password, or generate an RDS password to forward through
 				if pass != "" {
 					creds.Password = pass
@@ -141,6 +146,10 @@ var proxyClientCommand = &cobra.Command{
 						return err
 					}
 					creds.Password = authToken
+				}
+
+				if !proxyTarget.AwsAuthOnly {
+					creds.Options["host"] = target.Host
 				}
 
 				return overrideSSLConfig(creds, proxyTarget.SSL)

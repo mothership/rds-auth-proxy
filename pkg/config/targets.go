@@ -10,6 +10,7 @@ type ProxyTarget struct {
 	// For tunneling the connection through a kubernetes port-forward, only useful
 	// for client-side proxy targets
 	PortForward *PortForward `mapstructure:"port_forward,omitempty"`
+	AwsAuthOnly bool `mapstructure:"aws_auth_only", default:false`
 }
 
 // Target is the actual DB server we're connecting to
