@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/rds/auth v1.1.7
 	github.com/aws/aws-sdk-go-v2/service/rds v1.9.0
 	github.com/imdario/mergo v0.3.8 // indirect
-	github.com/jackc/pgproto3/v2 v2.1.1
+	github.com/jackc/pgproto3/v2 v2.3.3
 	github.com/spf13/afero v1.6.0
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.8.1
